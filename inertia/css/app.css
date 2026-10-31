@@ -1,0 +1,142 @@
+@import 'tailwindcss';
+@import './starter.css' layer(base);
+
+.action-spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-end: 0.5rem;
+  flex-shrink: 0;
+  vertical-align: -0.125em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: action-spin 0.8s linear infinite;
+}
+@keyframes action-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.request-progress {
+  position: fixed;
+  top: 4.5rem;
+  right: 1rem;
+  z-index: 10002;
+  max-width: calc(100vw - 2rem);
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 2px 12px #0002;
+  pointer-events: none;
+  font-size: 0.875rem;
+}
+.loading-skeleton {
+  padding-block: 1rem;
+}
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1.5rem;
+}
+.skeleton-rows {
+  display: grid;
+  gap: 1rem;
+}
+.skeleton-card {
+  border: 1px solid #d1d5db;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: #fff;
+}
+.skeleton-block {
+  background: #e5e7eb;
+  border-radius: 0.4rem;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+.skeleton-image {
+  height: 10rem;
+  margin-bottom: 1.25rem;
+}
+.skeleton-title {
+  width: 65%;
+  height: 1.25rem;
+  margin-bottom: 1rem;
+}
+.skeleton-line {
+  height: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+.skeleton-short {
+  width: 40%;
+  height: 0.875rem;
+}
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@layer base {
+  .restaurant {
+    color-scheme: light;
+    color: #111827;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .restaurant section[id] {
+    scroll-margin-top: 4rem;
+  }
+  .restaurant button,
+  .restaurant a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :where(button, a, input, select, textarea, summary):focus-visible {
+    outline: 3px solid #047857;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 3px white;
+  }
+
+  .restaurant :where(input, select, textarea) {
+    border-color: #6b7280;
+  }
+
+  .restaurant input::placeholder,
+  .restaurant textarea::placeholder {
+    color: #4b5563;
+    opacity: 1;
+  }
+
+  .restaurant footer input::placeholder {
+    color: #d1d5db;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: -10rem;
+    left: 1rem;
+    z-index: 10001;
+    background: white;
+    color: #111827;
+    padding: 1rem;
+  }
+  .skip-link:focus {
+    top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

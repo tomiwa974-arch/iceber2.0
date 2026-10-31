@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ request.plainCookie('app_theme', { defaultValue: 'light', encoded: false }) }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-inertia>
+      Iceberg
+    </title>
+
+    @viteReactRefresh({ nonce: cspNonce })
+    @vite(['inertia/app.tsx'], { nonce: cspNonce })
+    @inertiaHead()
+    @stack('dumper')
+  </head>
+
+  <body>
+    @inertia()
+  </body>
+
+</html>

@@ -1,0 +1,43 @@
+# Dependencies and AdonisJS build
+node_modules
+build
+.adonisjs/
+tmp/*
+!tmp/.gitkeep
+
+# Secrets
+.env
+.env.local
+.env.production.local
+.env.development.local
+.env.*
+!.env.example
+!.env.test
+
+# Local database files
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+
+# Frontend assets compiled code
+public/assets
+
+# Build tools specific
+npm-debug.log
+yarn-error.log
+
+# Editors specific
+.fleet
+.idea
+.vscode
+
+# Platform specific
+.DS_Store
+
+# Local dependency download cache
+.npm-cache/
+
+# Uploaded restaurant photos
+public/uploads/
