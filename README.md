@@ -11,6 +11,21 @@ The app runs on AdonisJS, React/Inertia, and the XAMPP MySQL/MariaDB database `i
 5. On first use, visit `/admin` or `/admin/setup` **from this computer**. Choose your administrator name, email, and a password of at least 12 characters. Setup closes after the first account is created.
 6. After setup, sign in at `/admin/login`. Use **Sign out** when finished. Customers can view the menu, send reservation requests, and subscribe without accounts.
 
+## Render production build
+
+Use Node.js 24 or newer and configure the application environment variables in Render.
+
+- Build command: `npm ci --include=dev && npm run build && cd build && npm ci --omit=dev`
+- Start command (from the repository root): `cd build && node bin/server.js`
+
+`npm run build` runs `node ace codegen` before `node ace build`. Codegen generates the
+file indexes and route-derived Tuyau registry from source before Vite imports
+`@generated/registry`. The production bundler alone refreshes file indexes but does
+not scan routes. Keep `.adonisjs` ignored; a clean checkout regenerates it during
+the build. Run the build with development dependencies installed and the required
+application environment variables available. Codegen warms up the app without
+starting the HTTP server or the providers' background workers.
+
 ## Database settings
 
 The ignored `.env` file contains the local connection settings. This installation uses `127.0.0.1:3306`, database `iceberg`, and XAMPP's local `root` account. If you set a MySQL password, put it in `DB_PASSWORD`. `.env.example` lists the expected variables; never commit actual credentials or `APP_KEY`.

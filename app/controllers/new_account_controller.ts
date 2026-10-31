@@ -12,6 +12,6 @@ export default class NewAccountController {
     const user = await User.create({ fullName, email, password })
 
     await auth.use('web').login(user)
-    response.redirect().toRoute('dashboard')
+    response.redirect('/dashboard')
   }
 }
