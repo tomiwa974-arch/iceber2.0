@@ -10,7 +10,8 @@ import {
 import { rateLimits } from '#config/rate_limits'
 import { randomUUID } from 'node:crypto'
 import User from '#models/user'
-import { adminLoginValidator, adminSetupValidator } from '#validators/admin'
+import { adminLoginValidator } from '#validators/admin'
+import { createFirstAdmin } from '#services/admin_bootstrap'
 import { errors } from '@adonisjs/auth'
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
@@ -98,17 +99,7 @@ export default class AdminSessionController {
       return response.notFound({ message: 'Administrator setup is unavailable.' })
     }
     await enforceLimit('setup:' + clientRateKey(request.ip()), 5, 900000)
-    const { fullName, email, password } = await request.validateUsing(adminSetupValidator)
-
-    const user = await db.transaction(async (trx) => {
-      const bootstrap = await trx.from('admin_bootstrap').where('id', 1).forUpdate().first()
-      if (!bootstrap || bootstrap.completed) return null
-      if (await User.query({ client: trx }).where('is_admin', true).first()) return null
-
-      const admin = await User.create({ fullName, email, password, isAdmin: true }, { client: trx })
-      await trx.from('admin_bootstrap').where('id', 1).update({ completed: true })
-      return admin
-    })
+    const user = await createFirstAdmin(request.all())
 
     if (!user) return response.notFound({ message: 'Administrator setup is unavailable.' })
     await auth.use('web').login(user)

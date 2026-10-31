@@ -26,6 +26,49 @@ the build. Run the build with development dependencies installed and the require
 application environment variables available. Codegen warms up the app without
 starting the HTTP server or the providers' background workers.
 
+## First administrator on Render
+
+Accounts in your laptop's database are separate from accounts in the production
+database. Public signup is disabled, and the browser setup page is local-only.
+
+After deploying, open the service's private **Shell** in the Render dashboard and run:
+
+```sh
+cd build
+node ace migration:run --force
+node ace admin:setup
+```
+
+The command prompts for your name, email, password and confirmation. Passwords are
+hidden and must contain 12–128 characters including uppercase, lowercase, a number
+and a symbol. Then sign in on your site at `/admin/login` with those details.
+Run this command manually once; do not add it to the build or start command.
+It uses the service's configured database, hashes the password, and permanently
+closes initial setup. It refuses to run if an administrator already exists or
+setup was previously completed. It does not reset passwords or add more admins.
+Access requires control of the server console, and public signup remains closed.
+Render provides Shell access on paid web services, not Free web services; see
+[Render's Shell access documentation](https://render.com/docs/ssh).
+
+### Render Free without Shell access
+
+In the service's Render Environment settings, temporarily add `ADMIN_SETUP_NAME`,
+`ADMIN_SETUP_EMAIL` and `ADMIN_SETUP_PASSWORD`. Choose your own strong password;
+do not put it in Git, build commands or chat. Use this temporary start command:
+
+```sh
+cd build && node ace migration:run --force && node ace admin:setup --from-env && node bin/server.js
+```
+
+Deploy, then sign in at `/admin/login`. After verifying access, remove the three
+`ADMIN_SETUP_*` environment variables and restore the normal start command:
+`cd build && node bin/server.js`. Save and redeploy. The administrator remains in
+the configured database. The environment mode never updates existing accounts or
+reopens completed setup; repeated starts safely skip account creation. Invalid or
+missing setup details before first setup stop startup with a generic error that
+does not print credentials. This command requires the same persistent production
+database as the website.
+
 ## Database settings
 
 The ignored `.env` file contains the local connection settings. This installation uses `127.0.0.1:3306`, database `iceberg`, and XAMPP's local `root` account. If you set a MySQL password, put it in `DB_PASSWORD`. `.env.example` lists the expected variables; never commit actual credentials or `APP_KEY`.
