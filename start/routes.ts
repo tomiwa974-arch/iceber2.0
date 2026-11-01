@@ -12,6 +12,7 @@ const TableBookingsController = () => import('#controllers/table_bookings_contro
 const PaymentsController = () => import('#controllers/payments_controller')
 
 router.on('/').renderInertia('home', {}).as('home')
+router.get('/uploads/menu/:name', [RestaurantController, 'photo'])
 for (const policy of ['privacy', 'terms', 'refunds', 'cookies'] as const) {
   router.on(`/${policy}`).renderInertia('policy', { policy })
 }

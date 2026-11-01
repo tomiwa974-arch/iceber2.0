@@ -7,7 +7,7 @@ import { addToOrder } from '~/lib/order_cart'
 import VerifyEmail from '~/components/verify_email'
 import { RESERVATION_TERMS } from '../../shared/reservation_terms'
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Head, router } from '@inertiajs/react'
 import { useRef } from 'react'
 import ManageReservation from '~/components/manage_reservation'
@@ -29,7 +29,7 @@ import {
 } from 'lucide-react'
 
 import IcebergLogo from '~/components/iceberg_logo'
-import { activeSpecial, specialDate } from '~/lib/specials'
+import { activeSpecials, specialDate } from '~/lib/specials'
 import { useSpecialsClock } from '~/lib/use_specials_clock'
 
 import {
@@ -43,16 +43,18 @@ import {
 const RotatingPlate = ({
   image,
   alt,
-  isSpinning = false,
+  isSpinning = true,
 }: {
   image: string
   alt: string
   isSpinning?: boolean
 }) => {
+  const reduceMotion = useReducedMotion()
+  const [failedImage, setFailedImage] = useState('')
   return (
     <motion.div
       className="relative w-full h-full"
-      animate={isSpinning ? { rotate: 360 } : {}}
+      animate={isSpinning && !reduceMotion ? { rotate: 360 } : { rotate: 0 }}
       transition={{
         duration: 20,
         repeat: Infinity,
@@ -60,8 +62,13 @@ const RotatingPlate = ({
       }}
     >
       <div className="absolute inset-0 rounded-full shadow-xl overflow-hidden">
-        {image ? (
-          <img src={image} alt={alt} className="w-full h-full object-cover" />
+        {image && failedImage !== image ? (
+          <img
+            src={image}
+            alt={alt}
+            onError={() => setFailedImage(image)}
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full grid place-items-center bg-gray-100 text-gray-600">
             <IcebergLogo className="h-24 w-24" />
@@ -202,8 +209,7 @@ const Navigation = () => {
 const Hero = () => {
   const { settings, specials, loaded, error: loadError } = useRestaurant()
   const now = useSpecialsClock(specials)
-  const special = activeSpecial(specials, now)
-  const remainingMinutes = special ? Math.max(1, Math.ceil((special.endsAt - now) / 60000)) : 0
+  const liveSpecials = activeSpecials(specials, now)
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
@@ -252,52 +258,35 @@ const Hero = () => {
             transition={{ duration: 0.6 }}
             className="relative"
           >
-            <div className="relative w-80 h-80 md:w-96 md:h-96 mx-auto">
-              <RotatingPlate image={special?.image ?? ''} alt={special?.title ?? ''} />
-              <div className="absolute -inset-4 rounded-full border border-gray-200" />
-              <div className="absolute -inset-8 rounded-full border border-gray-100" />
-            </div>
-            <div
-              className="text-center mt-8 max-w-md mx-auto"
-              data-testid="daily-special"
-              aria-live="polite"
-            >
+            <div className="text-center mx-auto" data-testid="daily-special" aria-live="polite">
               <span className="inline-block rounded-full bg-emerald-50 text-emerald-800 px-3 py-1 text-xs font-medium mb-3">
-                Daily Special
+                Daily Specials
               </span>
               {!loaded && !loadError ? (
                 <LoadingSkeleton label="Loading today's special..." count={1} />
-              ) : special ? (
-                <>
-                  <h2 className="text-xl font-semibold text-gray-900">{special.title}</h2>
-                  <p className="text-gray-600 text-sm mt-2">{special.caption}</p>
-                  <p className="font-semibold text-gray-900 mt-2">{formatPrice(special.price)}</p>
-                  <div className="h-1 bg-gray-100 rounded-full mt-4 overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-700 transition-all"
-                      style={{
-                        width:
-                          Math.max(
-                            0,
-                            Math.min(
-                              100,
-                              ((special.endsAt - now) / (special.endsAt - special.startsAt)) * 100
-                            )
-                          ) + '%',
-                      }}
-                    />
-                  </div>
-                  <p className="text-gray-600 text-xs mt-2">
-                    {remainingMinutes >= 1440
-                      ? Math.ceil(remainingMinutes / 1440) + ' days'
-                      : remainingMinutes >= 60
-                        ? Math.ceil(remainingMinutes / 60) + ' hours'
-                        : remainingMinutes + ' minutes'}{' '}
-                    remaining ? Until {specialDate(special.endsAt)}
-                  </p>
-                </>
+              ) : liveSpecials.length ? (
+                <div className={`special-plates special-plates-${liveSpecials.length}`}>
+                  {liveSpecials.map((special) => (
+                    <article key={special.id} className="special-plate-card">
+                      <div className="special-plate-image">
+                        <RotatingPlate image={special.image} alt={special.title} />
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900 mt-4">{special.title}</h2>
+                      <p className="text-gray-600 text-sm mt-1">{special.caption}</p>
+                      <p className="font-semibold text-gray-900 mt-2">
+                        {formatPrice(special.price)}
+                      </p>
+                      <p className="text-gray-600 text-xs mt-2">
+                        Until {specialDate(special.endsAt)}
+                      </p>
+                    </article>
+                  ))}
+                </div>
               ) : (
                 <>
+                  <div className="special-plate-image mx-auto mb-8">
+                    <RotatingPlate image="" alt="Iceberg kitchen" />
+                  </div>
                   <p className="text-gray-600 font-medium">Something delicious is coming</p>
                   <p className="text-gray-600 text-sm mt-1">
                     Check back for our next daily special.

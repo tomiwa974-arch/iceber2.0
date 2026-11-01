@@ -300,6 +300,8 @@ test.group('Restaurant API and admin access', (group) => {
       { id: 'special-a', title: 'First', durationDays: 1 },
       { id: 'special-b', title: 'Second', durationDays: 3 },
       { id: 'special-c', title: 'Third', durationDays: 2 },
+      { id: 'special-d', title: 'Fourth', durationDays: 1 },
+      { id: 'special-e', title: 'Fifth', durationDays: 1 },
     ]) {
       ;(
         await client
@@ -323,24 +325,26 @@ test.group('Restaurant API and admin access', (group) => {
       .loginAs(admin)
     const posts = state.body().specials
     assert.isAbove(posts[0].startsAt, Date.now() - 60000)
-    assert.equal(posts[0].endsAt, posts[1].startsAt)
+    assert.isAtMost(Math.abs(posts[1].startsAt - Date.now()), 5000)
+    assert.isAtMost(Math.abs(posts[2].startsAt - Date.now()), 5000)
+    assert.equal(posts[0].endsAt, posts[3].startsAt)
     assert.equal(posts[1].endsAt - posts[1].startsAt, 3 * 86400000)
     const moved = await client
-      .post('/api/admin/specials/special-c/move')
+      .post('/api/admin/specials/special-e/move')
       .header('Accept', 'application/json')
       .loginAs(admin)
       .withCsrfToken()
       .json({ direction: -1 })
     moved.assertStatus(200)
-    assert.equal(moved.body().specials[1].id, 'special-c')
+    assert.equal(moved.body().specials[3].id, 'special-e')
     const ended = await client
       .delete('/api/admin/specials/special-a')
       .header('Accept', 'application/json')
       .loginAs(admin)
       .withCsrfToken()
     ended.assertStatus(200)
-    assert.equal(ended.body().specials[0].id, 'special-c')
-    assert.isAtMost(Math.abs(ended.body().specials[0].startsAt - Date.now()), 5000)
+    const promoted = ended.body().specials.find((post: any) => post.id === 'special-e')
+    assert.isAtMost(Math.abs(promoted.startsAt - Date.now()), 5000)
   })
 
   test('first-admin setup hashes its password and locks itself permanently', async ({

@@ -1,9 +1,9 @@
 import { validEmailProof } from '#services/email_verification'
 import emailDomain from '#services/email_domain'
 import { randomUUID } from 'node:crypto'
-import { open } from 'node:fs/promises'
+import { open, readFile } from 'node:fs/promises'
 import { DateTime } from 'luxon'
-import app from '@adonisjs/core/services/app'
+import db from '@adonisjs/lucid/services/db'
 import type { HttpContext } from '@adonisjs/core/http'
 import RestaurantService from '#services/restaurant_service'
 import ReservationPayments from '#services/reservation_payments'
@@ -164,13 +164,24 @@ export default class RestaurantController {
       return response.unprocessableEntity({ message: 'Upload a valid JPEG, PNG or WebP photo.' })
     }
     const name = `${randomUUID()}.${extension}`
-    await photo.move(app.publicPath('uploads/menu'), { name, overwrite: false })
-    if (photo.hasErrors) {
-      return response.unprocessableEntity({
-        message: 'The photo could not be saved.',
-        errors: photo.errors,
-      })
-    }
+    await db.table('uploaded_photos').insert({
+      name,
+      content_type: extension === 'jpg' ? 'image/jpeg' : `image/${extension}`,
+      data: await readFile(photo.tmpPath!),
+    })
     return response.created({ url: `/uploads/menu/${name}` })
+  }
+
+  async photo({ params, request, response }: HttpContext) {
+    if (!/^[a-f0-9-]{36}\.(jpg|png|webp)$/.test(params.name)) return response.notFound()
+    const photo = await db.from('uploaded_photos').where('name', params.name).first()
+    if (!photo) return response.notFound()
+    const etag = `"${photo.name}"`
+    response.header('Cache-Control', 'public, max-age=31536000, immutable')
+    response.header('ETag', etag)
+    response.header('X-Content-Type-Options', 'nosniff')
+    if (request.header('if-none-match') === etag) return response.status(304).send('')
+    response.header('Content-Type', photo.content_type)
+    return response.send(Buffer.from(photo.data))
   }
 }

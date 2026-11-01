@@ -9,7 +9,7 @@ import {
   moveSpecial,
   formatPrice,
 } from '~/lib/restaurant_store'
-import { activeSpecial, specialStatus, specialDate } from '~/lib/specials'
+import { activeSpecials, nextSpecialStart, specialStatus, specialDate } from '~/lib/specials'
 import { useSpecialsClock } from '~/lib/use_specials_clock'
 import IcebergLogo from './iceberg_logo'
 import MenuPhotoField from './menu_photo_field'
@@ -18,7 +18,7 @@ const emptyDraft = { title: '', caption: '', image: '', price: 0, durationDays: 
 export default function SpecialsAdmin() {
   const { menu, specials, loaded } = useRestaurant()
   const now = useSpecialsClock(specials)
-  const live = activeSpecial(specials, now)
+  const live = activeSpecials(specials, now)
   const queued = specials.filter((post) => post.startsAt > now)
   const [draft, setDraft] = useState(emptyDraft)
   const [message, setMessage] = useState('')
@@ -59,18 +59,22 @@ export default function SpecialsAdmin() {
       setSource('')
     }
   }
-  const nextStart = Math.max(now, ...specials.map((post) => post.endsAt))
+  const nextStart = nextSpecialStart(specials, now)
   return (
     <div>
       <div className="ad-special-summary">
         <div>
-          <span className={live ? 'ad-badge green' : 'ad-badge neutral'}>
-            {live ? 'LIVE NOW' : 'NO ACTIVE SPECIAL'}
+          <span className={live.length ? 'ad-badge green' : 'ad-badge neutral'}>
+            {live.length ? `${live.length} LIVE NOW` : 'NO ACTIVE SPECIAL'}
           </span>
-          <h2>{live?.title ?? 'Your next special starts here'}</h2>
+          <h2>
+            {live.length
+              ? live.map((post) => post.title).join(' · ')
+              : 'Your next special starts here'}
+          </h2>
           <p className="ad-muted">
-            {live
-              ? `Expires ${specialDate(live.endsAt)}`
+            {live.length
+              ? 'Up to three specials appear together on the homepage.'
               : 'Post a special to feature it on the rotating homepage plate.'}
           </p>
         </div>
@@ -83,7 +87,8 @@ export default function SpecialsAdmin() {
         <section className="ad-panel ad-settings">
           <h2>Create a daily special</h2>
           <p className="ad-muted">
-            Live for one day by default. Every queued post gets its full duration.
+            Publish up to three specials at once. Additional posts queue for the next free spot,
+            each with its full duration.
           </p>
           <form onSubmit={submit}>
             <fieldset

@@ -1,6 +1,44 @@
 @import 'tailwindcss';
 @import './starter.css' layer(base);
 
+.special-plates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem 1.25rem;
+  max-width: 34rem;
+  margin: 1.5rem auto 0;
+}
+.special-plate-card {
+  min-width: 0;
+}
+.special-plate-image {
+  width: min(100%, 14rem);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: 50%;
+  outline: 1px solid #e5e7eb;
+  outline-offset: 7px;
+}
+.special-plates-1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+.special-plates-1 .special-plate-image {
+  width: min(100%, 23rem);
+}
+.special-plates-3 .special-plate-card:first-child {
+  grid-column: 1 / -1;
+  width: calc(50% - 0.625rem);
+  justify-self: center;
+}
+@media (max-width: 380px) {
+  .special-plates {
+    gap: 1.5rem 0.75rem;
+  }
+  .special-plates h2 {
+    font-size: 1rem;
+  }
+}
+
 .action-spinner {
   display: inline-block;
   width: 1em;
